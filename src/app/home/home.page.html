@@ -33,7 +33,7 @@
     <ion-item-sliding *ngFor="let task of taskService.getTasks(), index as i">
       <ion-item *ngIf="!task.done">
         <ion-label>{{ task.value }}</ion-label>
-        <ion-checkbox slot="start" color="danger" [(ngModel)]="task.done"></ion-checkbox>
+        <ion-checkbox slot="start" color="danger" [(ngModel)]="task.done" (click)="taskService.switchDone(i)"></ion-checkbox>
         <ion-badge color="dark" *ngIf="task.date.getDate()">
           {{ task.date.toLocaleDateString() }}
         </ion-badge>
@@ -54,7 +54,7 @@
     <ion-item-sliding *ngFor="let task of taskService.getTasks(), index as i">
       <ion-item *ngIf="task.done">
         <ion-label>{{ task.value }}</ion-label>
-        <ion-checkbox slot="start" color="danger" [(ngModel)]="task.done"></ion-checkbox>
+        <ion-checkbox slot="start" color="danger" [(ngModel)]="task.done" (click)="taskService.switchDone(i)"></ion-checkbox>
         <ion-badge color="dark" *ngIf="task.date.getDate()">
           {{ task.date.toLocaleDateString() }}
         </ion-badge>

@@ -17,6 +17,10 @@ export class HomePage {
               public toastController : ToastController,
               public popoverController : PopoverController) {}
 
+  ngOnInit() {
+    this.taskService.getFromStorage();
+  }
+
   async presentAlertPromptAdd() {
     let now : any = new Date;
     let minDate : string = now.getFullYear()+"-"+now.getMonth()+"-"+now.getDate();
