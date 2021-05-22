@@ -1,5 +1,8 @@
+import { Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { Plugins } from '@capacitor/core'
+import { AngularFirestore } from '@angular/fire/firestore';
+
 const { Storage } = Plugins;
 
 @Injectable({
@@ -8,42 +11,47 @@ const { Storage } = Plugins;
 export class TaskService {
 
   private tasks : Task[] = []; // Or you could use Array<Task> = [];
+  private collectionName : string = 'Task';
 
-  constructor() {}
+  constructor(
+    private firestore : AngularFirestore,
+  ) {}
     
   public getTasks() : Task[] {
     return this.tasks;
   }
 
   public addTask(value : string, date : string) {
-    date = date.replace("-", "/");
-    let task : Task = {value: value, date: new Date(date), done: false};
+    let task : Task;
+    
+    if (date != '') {
+      date = date.replace(/-/g, "/");
+      task = {value: value, date: new Date(date), done: false};
+    } else {
+      task = {value: value, done: false};
+    }
+
     this.tasks.push(task);
+    this.addToFirestore(task);
     this.setToStorage();
   }
 
-  public delTask(index : number) {
-    this.tasks.splice(index, 1);
-    this.setToStorage();
-  }
+  public updateTask(id, value : string, date : string, done : boolean) {
+    let task : Task;
 
-  public updateTask(index : number, value : string, date : string) {
-    let task : Task = this.tasks[index];
-    task.value = value;
-    task.date = new Date(date.replace("-", "/"));
-    this.tasks.splice(index, 1, task);
-    this.setToStorage();
-  }
-
-  public switchDone(index : number) {
-    let task : Task = this.tasks[index];
-    if (task.done == false) {
-      this.tasks[index].done = true
+    if (date != '') {
+      date = date.replace(/-/g, "/");
+      task = {value: value, date: new Date(date), done: done};
+    } else {
+      task = {value: value, done: done};
     }
-    else {
-      this.tasks[index].done = false
-    }
-    this.setToStorage();
+
+    this.updateOnFirestore(id, task);
+  }
+
+  public switchDone(id, task) {
+    task.done = !task.done;
+    this.updateOnFirestore(id, task);
   }
 
   public async setToStorage() {
@@ -73,10 +81,26 @@ export class TaskService {
     }
     return tempTasks;
   }
+
+  public addToFirestore(record : Task) {
+    return this.firestore.collection(this.collectionName).add(record);
+  }
+
+  public getFromFirestore() {
+    return this.firestore.collection(this.collectionName).valueChanges({idField: 'id'});
+  }
+
+  public updateOnFirestore(recordId, record : Task) {
+    this.firestore.doc(this.collectionName + '/' + recordId).update(record);
+  }
+
+  public deleteOnFirestore(recordId) {
+    this.firestore.doc(this.collectionName + '/' + recordId).delete();
+  }
 }
 
-interface Task {
+interface Task { // '?' means that the value is optional
   value : String;
-  date : Date;
-  done ?: boolean; // '?' means that the value is optional
+  date ?: Date;
+  done : boolean;
 }

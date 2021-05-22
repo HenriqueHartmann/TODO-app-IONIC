@@ -1,0 +1,38 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      Perfil
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content *ngIf="authService.logged() | async as user">
+  <img [src]="user.photoURL">
+  <ion-item>
+    <ion-text>
+      <p>Nome</p>
+      <h5>{{ user.displayName }}</h5>
+    </ion-text>
+  </ion-item>
+  <ion-item>
+    <ion-text>
+      <p>Telefone</p>
+      <h5>{{ user.phoneNumber }}</h5>
+    </ion-text>
+  </ion-item>
+  <ion-item>
+    <ion-text>
+      <p>Email</p>
+      <h5>{{ user.email }}</h5>
+    </ion-text>
+  </ion-item>
+  <ion-item>
+    <ion-text>
+      <p>Provedor de Serviço</p>
+      <h5>{{ user.providerData[0].providerId }}</h5>
+    </ion-text>
+  </ion-item>
+</ion-content>

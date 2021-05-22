@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { AlertController, PopoverController, ToastController } from '@ionic/angular';
 import { PopoverComponent } from '../popover/popover.component';
 import { TaskService } from './../services/task.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -10,7 +11,8 @@ import { TaskService } from './../services/task.service';
 })
 export class HomePage {
 
-  type : string = "pending"
+  type : string = "pending";
+  public tasks : Observable<any[]>;
 
   constructor(public alertController : AlertController, 
               public taskService : TaskService,
@@ -18,7 +20,7 @@ export class HomePage {
               public popoverController : PopoverController) {}
 
   ngOnInit() {
-    this.taskService.getFromStorage();
+    this.tasks = this.taskService.getFromFirestore();
   }
 
   async presentAlertPromptAdd() {
@@ -63,7 +65,7 @@ export class HomePage {
     await alert.present();
   }
   
-  async presentAlertPromptDelete(index : number) {
+  async presentAlertPromptDelete(id) {
     const alert = await this.alertController.create({
       header: 'Remover Tarefa',
       message: 'Deseja realmente remover a tarefa?',
@@ -73,7 +75,7 @@ export class HomePage {
           role: 'cancel'
         }, {
           text: 'Excluir',
-          handler: () => this.taskService.delTask(index)
+          handler: () => this.taskService.deleteOnFirestore(id)
         }
       ]
     });
@@ -81,12 +83,16 @@ export class HomePage {
     await alert.present();
   }
 
-  async presentAlertPromptUpdate(index : number, task : any) {
-    let now : any = new Date;
+  async presentAlertPromptUpdate(id, task : any) {
+    let now : Date = new Date;
     let minDate : string = now.getFullYear()+"-"+now.getMonth()+"-"+now.getDate();
     let maxDate : string = (now.getFullYear() + 5)+"-"+now.getMonth()+"-"+now.getDate();
-    let formattedDate : string = task.date.toLocaleDateString().split("/").reverse().join("-");
-
+    let formattedDate : string = "";
+    
+    if (task.date != null) {
+      formattedDate = new Date(task.date.seconds * 1000).toLocaleDateString().split("/").reverse().join("-");
+    }
+    
     const alert = await this.alertController.create({
       header: 'Atualizar Tarefa',
       inputs: [
@@ -112,11 +118,11 @@ export class HomePage {
           text: 'Salvar',
           handler: (alertData) => {
             if (alertData.task != "") {
-              this.taskService.updateTask(index, alertData.task, alertData.date);
+              this.taskService.updateTask(id, alertData.task, alertData.date, task.done);
             }
             else {
               this.presentToast();
-              this.presentAlertPromptUpdate(index, alertData);
+              this.presentAlertPromptUpdate(id, alertData);
             }
           }
         }
